@@ -13,7 +13,7 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = int(SCREEN_WIDTH * 0.8)
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption('independ') #tytuł
+pygame.display.set_caption('independ')
 
 #set framerate
 clock = pygame.time.Clock()
@@ -33,12 +33,9 @@ level = 1
 start_game = False
 start_intro = False
 
-
 #define player action variables
 moving_left = False
 moving_right = False
-
-
 
 #load music and sounds
 pygame.mixer.music.load('audio/tlo.wav')
@@ -50,19 +47,12 @@ jump_fx.set_volume(0.05)
 shot_fx = pygame.mixer.Sound('audio/shot.wav')
 shot_fx.set_volume(0.05)
 
-
-
 #load images
 #button images
 start_img = pygame.image.load('img/start_btn.png').convert_alpha()
 exit_img = pygame.image.load('img/exit_btn.png').convert_alpha()
 restart_img = pygame.image.load('img/restart_btn.png').convert_alpha()
 #background
-pine1_img = pygame.image.load('img/Background/pine1.png').convert_alpha()
-pine2_img = pygame.image.load('img/Background/pine2.png').convert_alpha()
-mountain_img = pygame.image.load('img/Background/mountain.png').convert_alpha()
-sky_img = pygame.image.load('img/Background/sky_cloud.png').convert_alpha()
-
 img0 = pygame.image.load('img/Background/0.png').convert_alpha()
 img1 = pygame.image.load('img/Background/1.png').convert_alpha()
 img2 = pygame.image.load('img/Background/2.png').convert_alpha()
@@ -96,7 +86,6 @@ item_boxes = {
     'Grenade'   : grenade_box_img
 }
 
-
 #define colours
 BG = (144, 201, 120)
 RED = (255, 0, 0)
@@ -115,7 +104,7 @@ def draw_text(text, font, text_col, x, y):
 
 def draw_bg():
     screen.fill(BG)
-    width = sky_img.get_width()
+    width = img11.get_width()
     for x in range(5):
         screen.blit(img11, ((x * width) - bg_scroll * 0.5, 0))
         screen.blit(img10, ((x * width) - bg_scroll * 0.6, 0))
@@ -134,9 +123,6 @@ def draw_bg():
 #function to reset level
 def reset_level():
     enemy_group.empty()
-    bullet_group.empty()
-    grenade_group.empty()
-    explosion_group.empty()
     item_box_group.empty()
     decoration_group.empty()
     water_group.empty()
@@ -149,9 +135,6 @@ def reset_level():
         data.append(r)
 
     return data
-
-
-
 
 class Soldier(pygame.sprite.Sprite):
     def __init__(self, char_type, x, y, scale, speed, ammo, grenades):
@@ -180,7 +163,7 @@ class Soldier(pygame.sprite.Sprite):
         self.idling_counter = 0
         
         #load all images for the players
-        animation_types = ['Idle', 'Run', 'Jump', 'Death']
+        animation_types = ['Idle', 'Run', 'Jump']
         for animation in animation_types:
             #reset temporary list of images
             temp_list = []
@@ -202,8 +185,6 @@ class Soldier(pygame.sprite.Sprite):
     def update(self):
         self.update_animation()
         self.check_alive()
-        
-        
 
 
     def move(self, moving_left, moving_right):
@@ -287,11 +268,6 @@ class Soldier(pygame.sprite.Sprite):
                 screen_scroll = -dx
 
         return screen_scroll, level_complete
-
-
-
-    
-
 
     def ai(self):
         if self.alive and player.alive:
@@ -466,14 +442,8 @@ class ItemBox(pygame.sprite.Sprite):
         #check if the player has picked up the box
         if pygame.sprite.collide_rect(self, player):
             #check what kind of box it was
-            if self.item_type == 'Health':
-                player.health += 25
-                if player.health > player.max_health:
-                    player.health = player.max_health
-            elif self.item_type == 'Ammo':
-                player.ammo += 15
-            elif self.item_type == 'Grenade':
-                player.grenades += 3
+            if self.item_type == 'przerobic na npc':
+                player.speed += 15
             #delete the item box
             self.kill()
 
@@ -493,132 +463,6 @@ class HealthBar():
         pygame.draw.rect(screen, BLACK, (self.x - 2, self.y - 2, 154, 24))
         pygame.draw.rect(screen, RED, (self.x, self.y, 150, 20))
         pygame.draw.rect(screen, GREEN, (self.x, self.y, 150 * ratio, 20))
-
-
-class Bullet(pygame.sprite.Sprite):
-    def __init__(self, x, y, direction):
-        pygame.sprite.Sprite.__init__(self)
-        self.speed = 10
-        self.image = bullet_img
-        self.rect = self.image.get_rect()
-        self.rect.center = (x, y)
-        self.direction = direction
-
-    def update(self):
-        #move bullet
-        self.rect.x += (self.direction * self.speed) + screen_scroll
-        #check if bullet has gone off screen
-        if self.rect.right < 0 or self.rect.left > SCREEN_WIDTH:
-            self.kill()
-        #check for collision with level
-        for tile in world.obstacle_list:
-            if tile[1].colliderect(self.rect):
-                self.kill()
-
-        #check collision with characters
-        if pygame.sprite.spritecollide(player, bullet_group, False):
-            if player.alive:
-                player.health -= 5
-                self.kill()
-        for enemy in enemy_group:
-            if pygame.sprite.spritecollide(enemy, bullet_group, False):
-                if enemy.alive:
-                    enemy.health -= 25
-                    self.kill()
-
-
-
-class Grenade(pygame.sprite.Sprite):
-    def __init__(self, x, y, direction):
-        pygame.sprite.Sprite.__init__(self)
-        self.timer = 100
-        self.vel_y = -11
-        self.speed = 7
-        self.image = grenade_img
-        self.rect = self.image.get_rect()
-        self.rect.center = (x, y)
-        self.width = self.image.get_width()
-        self.height = self.image.get_height()
-        self.direction = direction
-
-    def update(self):
-        self.vel_y += GRAVITY
-        dx = self.direction * self.speed
-        dy = self.vel_y
-
-        #check for collision with level
-        for tile in world.obstacle_list:
-            #check collision with walls
-            if tile[1].colliderect(self.rect.x + dx, self.rect.y, self.width, self.height):
-                self.direction *= -1
-                dx = self.direction * self.speed
-            #check for collision in the y direction
-            if tile[1].colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
-                self.speed = 0
-                #check if below the ground, i.e. thrown up
-                if self.vel_y < 0:
-                    self.vel_y = 0
-                    dy = tile[1].bottom - self.rect.top
-                #check if above the ground, i.e. falling
-                elif self.vel_y >= 0:
-                    self.vel_y = 0
-                    dy = tile[1].top - self.rect.bottom 
-
-
-        #update grenade position
-        self.rect.x += dx + screen_scroll
-        self.rect.y += dy
-
-        #countdown timer
-        self.timer -= 1
-        if self.timer <= 0:
-            self.kill()
-            grenade_fx.play()
-            explosion = Explosion(self.rect.x, self.rect.y, 0.5)
-            explosion_group.add(explosion)
-            #do damage to anyone that is nearby
-            if abs(self.rect.centerx - player.rect.centerx) < TILE_SIZE * 2 and \
-                abs(self.rect.centery - player.rect.centery) < TILE_SIZE * 2:
-                player.health -= 50
-            for enemy in enemy_group:
-                if abs(self.rect.centerx - enemy.rect.centerx) < TILE_SIZE * 2 and \
-                    abs(self.rect.centery - enemy.rect.centery) < TILE_SIZE * 2:
-                    enemy.health -= 50
-
-
-
-class Explosion(pygame.sprite.Sprite):
-    def __init__(self, x, y, scale):
-        pygame.sprite.Sprite.__init__(self)
-        self.images = []
-        for num in range(1, 6):
-            img = pygame.image.load(f'img/explosion/exp{num}.png').convert_alpha()
-            img = pygame.transform.scale(img, (int(img.get_width() * scale), int(img.get_height() * scale)))
-            self.images.append(img)
-        self.frame_index = 0
-        self.image = self.images[self.frame_index]
-        self.rect = self.image.get_rect()
-        self.rect.center = (x, y)
-        self.counter = 0
-
-
-    def update(self):
-        #scroll
-        self.rect.x += screen_scroll
-
-        EXPLOSION_SPEED = 4
-        #update explosion amimation
-        self.counter += 1
-
-        if self.counter >= EXPLOSION_SPEED:
-            self.counter = 0
-            self.frame_index += 1
-            #if the animation is complete then delete the explosion
-            if self.frame_index >= len(self.images):
-                self.kill()
-            else:
-                self.image = self.images[self.frame_index]
-
 
 class ScreenFade():
     def __init__(self, direction, colour, speed):
@@ -648,7 +492,6 @@ class ScreenFade():
 intro_fade = ScreenFade(1, BLACK, 4)
 death_fade = ScreenFade(2, PINK, 4)
 
-
 #create buttons
 start_button = button.Button(SCREEN_WIDTH // 2 - 130, SCREEN_HEIGHT // 2 - 150, start_img, 1)
 exit_button = button.Button(SCREEN_WIDTH // 2 - 110, SCREEN_HEIGHT // 2 + 50, exit_img, 1)
@@ -656,15 +499,10 @@ restart_button = button.Button(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50,
 
 #create sprite groups
 enemy_group = pygame.sprite.Group()
-bullet_group = pygame.sprite.Group()
-grenade_group = pygame.sprite.Group()
-explosion_group = pygame.sprite.Group()
 item_box_group = pygame.sprite.Group()
 decoration_group = pygame.sprite.Group()
 water_group = pygame.sprite.Group()
 exit_group = pygame.sprite.Group()
-
-
 
 #create empty tile list
 world_data = []
@@ -701,17 +539,6 @@ while run:
         draw_bg()
         #draw world map
         world.draw()
-        #show player health
-        health_bar.draw(player.health)
-        #show ammo
-        draw_text('AMMO: ', font, WHITE, 10, 35)
-        for x in range(player.ammo):
-            screen.blit(bullet_img, (90 + (x * 10), 40))
-        #show grenades
-        draw_text('GRENADES: ', font, WHITE, 10, 60)
-        for x in range(player.grenades):
-            screen.blit(grenade_img, (135 + (x * 15), 60))
-
 
         player.update()
         player.draw()
@@ -722,16 +549,11 @@ while run:
             enemy.draw()
 
         #update and draw groups
-       
-        
-        explosion_group.update()
         item_box_group.update()
         decoration_group.update()
         water_group.update()
         exit_group.update()
-        
 
-        explosion_group.draw(screen)
         item_box_group.draw(screen)
         decoration_group.draw(screen)
         water_group.draw(screen)
@@ -746,9 +568,6 @@ while run:
 
         #update player actions
         if player.alive:
-            
-            
-            
             if player.in_air:
                 player.update_action(2)#2: jump
             elif moving_left or moving_right:
@@ -807,15 +626,12 @@ while run:
             if event.key == pygame.K_ESCAPE:
                 run = False
 
-
         #keyboard button released
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_a:
                 moving_left = False
             if event.key == pygame.K_d:
                 moving_right = False
-            
-
 
     pygame.display.update()
 
