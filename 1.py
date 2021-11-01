@@ -37,9 +37,7 @@ start_intro = False
 #define player action variables
 moving_left = False
 moving_right = False
-shoot = False
-grenade = False
-grenade_thrown = False
+
 
 
 #load music and sounds
@@ -51,8 +49,7 @@ jump_fx = pygame.mixer.Sound('audio/jump.wav')
 jump_fx.set_volume(0.05)
 shot_fx = pygame.mixer.Sound('audio/shot.wav')
 shot_fx.set_volume(0.05)
-grenade_fx = pygame.mixer.Sound('audio/grenade.wav')
-grenade_fx.set_volume(0.05)
+
 
 
 #load images
@@ -164,7 +161,6 @@ class Soldier(pygame.sprite.Sprite):
         self.speed = speed
         self.ammo = ammo
         self.start_ammo = ammo
-        self.shoot_cooldown = 0
         self.grenades = grenades
         self.health = 100
         self.max_health = self.health
@@ -206,9 +202,8 @@ class Soldier(pygame.sprite.Sprite):
     def update(self):
         self.update_animation()
         self.check_alive()
-        #update cooldown
-        if self.shoot_cooldown > 0:
-            self.shoot_cooldown -= 1
+        
+        
 
 
     def move(self, moving_left, moving_right):
@@ -295,14 +290,7 @@ class Soldier(pygame.sprite.Sprite):
 
 
 
-    def shoot(self):
-        if self.shoot_cooldown == 0 and self.ammo > 0:
-            self.shoot_cooldown = 20
-            bullet = Bullet(self.rect.centerx + (0.75 * self.rect.size[0] * self.direction), self.rect.centery, self.direction)
-            bullet_group.add(bullet)
-            #reduce ammo
-            self.ammo -= 1
-            shot_fx.play()
+    
 
 
     def ai(self):
@@ -315,8 +303,6 @@ class Soldier(pygame.sprite.Sprite):
             if self.vision.colliderect(player.rect):
                 #stop running and face the player
                 self.update_action(0)#0: idle
-                #shoot
-                self.shoot()
             else:
                 if self.idling == False:
                     if self.direction == 1:
@@ -736,15 +722,15 @@ while run:
             enemy.draw()
 
         #update and draw groups
-        bullet_group.update()
-        grenade_group.update()
+       
+        
         explosion_group.update()
         item_box_group.update()
         decoration_group.update()
         water_group.update()
         exit_group.update()
-        bullet_group.draw(screen)
-        grenade_group.draw(screen)
+        
+
         explosion_group.draw(screen)
         item_box_group.draw(screen)
         decoration_group.draw(screen)
@@ -760,17 +746,9 @@ while run:
 
         #update player actions
         if player.alive:
-            #shoot bullets
-            if shoot:
-                player.shoot()
-            #throw grenades
-            elif grenade and grenade_thrown == False and player.grenades > 0:
-                grenade = Grenade(player.rect.centerx + (0.5 * player.rect.size[0] * player.direction),\
-                            player.rect.top, player.direction)
-                grenade_group.add(grenade)
-                #reduce grenades
-                player.grenades -= 1
-                grenade_thrown = True
+            
+            
+            
             if player.in_air:
                 player.update_action(2)#2: jump
             elif moving_left or moving_right:
@@ -822,10 +800,7 @@ while run:
                 moving_left = True
             if event.key == pygame.K_d:
                 moving_right = True
-            if event.key == pygame.K_SPACE:
-                shoot = True
-            if event.key == pygame.K_q:
-                grenade = True
+            
             if event.key == pygame.K_w and player.alive:
                 player.jump = True
                 jump_fx.play()
@@ -839,11 +814,7 @@ while run:
                 moving_left = False
             if event.key == pygame.K_d:
                 moving_right = False
-            if event.key == pygame.K_SPACE:
-                shoot = False
-            if event.key == pygame.K_q:
-                grenade = False
-                grenade_thrown = False
+            
 
 
     pygame.display.update()
